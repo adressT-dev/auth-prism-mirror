@@ -4,21 +4,9 @@
   "uid": "moe.yushi.authlibinjector",
   "versions": [
     {
-      "version": "52",
+      "version": "1.2.8",
       "type": "release",
-      "time": "2024-01-01T00:00:00.000Z",
-      "requires": [],
-      "mainClass": "net.yushi.authlibinjector.Main",
-      "libraries": [
-        {
-          "name": "moe.yushi:authlib-injector:52",
-          "downloads": {
-            "artifact": {
-              "url": "https://raw.githubusercontent.com/adressT-dev/auth-prism-mirror/main/authlib-injector.jar"
-            }
-          }
-        }
-      ]
+      "time": "2026-07-22T07:47:06.000Z"
     }
   ]
 }
