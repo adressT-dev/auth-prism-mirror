@@ -1,0 +1,9 @@
+{
+  "formatVersion": 1,
+  "packages": [
+    {
+      "name": "Authlib Injector",
+      "uid": "moe.yushi.authlibinjector"
+    }
+  ]
+}

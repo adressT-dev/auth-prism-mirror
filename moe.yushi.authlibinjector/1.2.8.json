@@ -4,8 +4,7 @@
   "uid": "moe.yushi.authlibinjector",
   "version": "1.2.8",
   "type": "release",
-  "releaseTime": "2026-07-22T08:04:55Z",
-  "mainClass": "net.yushi.authlibinjector.Main",
+  "releaseTime": "2026-07-22T08:21:49Z",
   "requires": [],
   "libraries": [
     {
