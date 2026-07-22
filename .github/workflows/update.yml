@@ -5,6 +5,9 @@ on:
     - cron: '0 0 * * *'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -15,12 +18,10 @@ jobs:
       - name: Fetch Latest Release Data
         id: check_version
         run: |
-          # 1. Запрашиваем последний релиз напрямую через GitHub API разработчика
           LATEST_VER=$(curl -s https://api.github.com/repos/yushijinhun/authlib-injector/releases/latest | jq -r '.tag_name' | sed 's/^v//')
           
-          # Проверка на случай ошибки запроса
           if [ -z "$LATEST_VER" ] || [ "$LATEST_VER" = "null" ]; then
-            echo "Не удалось получить версию с GitHub API"
+            echo "Не удалось получить версию"
             exit 1
           fi
           
@@ -30,12 +31,15 @@ jobs:
         run: |
           LATEST_VER="${{ steps.check_version.outputs.latest_ver }}"
           
-          # 2. Скачиваем jar файл прямо из релизов GitHub
           curl -L -o authlib-injector.jar "https://github.com/yushijinhun/authlib-injector/releases/download/v${LATEST_VER}/authlib-injector-${LATEST_VER}.jar"
+          
+          SHA256=$(sha256sum authlib-injector.jar | awk '{print $1}')
+          FILE_SIZE=$(stat -c%s authlib-injector.jar)
+          TIME_NOW=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
           
           mkdir -p moe.yushi.authlibinjector
           
-          # 3. Создаем index.json
+          # Генерируем 100% валидный index.json по спецификации Prism Meta
           cat <<EOF > moe.yushi.authlibinjector/index.json
           {
             "formatVersion": 1,
@@ -45,13 +49,13 @@ jobs:
               {
                 "version": "${LATEST_VER}",
                 "type": "release",
-                "time": "$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")"
+                "time": "${TIME_NOW}"
               }
             ]
           }
           EOF
 
-          # 4. Создаем файл конкретной версии (${LATEST_VER}.json)
+          # Генерируем 100% валидный файл конкретной версии
           cat <<EOF > "moe.yushi.authlibinjector/${LATEST_VER}.json"
           {
             "formatVersion": 1,
@@ -59,14 +63,16 @@ jobs:
             "uid": "moe.yushi.authlibinjector",
             "version": "${LATEST_VER}",
             "type": "release",
-            "time": "$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")",
+            "time": "${TIME_NOW}",
             "mainClass": "net.yushi.authlibinjector.Main",
             "libraries": [
               {
                 "name": "moe.yushi:authlib-injector:${LATEST_VER}",
                 "downloads": {
                   "artifact": {
-                    "url": "https://raw.githubusercontent.com/${{ github.repository }}/main/authlib-injector.jar"
+                    "url": "https://raw.githubusercontent.com/${{ github.repository }}/main/authlib-injector.jar",
+                    "sha256": "${SHA256}",
+                    "size": ${FILE_SIZE}
                   }
                 }
               }
