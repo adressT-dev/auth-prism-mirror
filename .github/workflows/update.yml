@@ -15,20 +15,27 @@ jobs:
       - name: Fetch Latest Release Data
         id: check_version
         run: |
-          curl -s https://authlib-injector.yushi.moe/2.0.0.json -o api_data.json
-          LATEST_VER=$(jq -r '.versions[0].version' api_data.json)
+          # 1. Запрашиваем последний релиз напрямую через GitHub API разработчика
+          LATEST_VER=$(curl -s https://api.github.com/repos/yushijinhun/authlib-injector/releases/latest | jq -r '.tag_name' | sed 's/^v//')
+          
+          # Проверка на случай ошибки запроса
+          if [ -z "$LATEST_VER" ] || [ "$LATEST_VER" = "null" ]; then
+            echo "Не удалось получить версию с GitHub API"
+            exit 1
+          fi
+          
           echo "latest_ver=$LATEST_VER" >> $GITHUB_OUTPUT
 
       - name: Download and Update Files
         run: |
           LATEST_VER="${{ steps.check_version.outputs.latest_ver }}"
           
-          # 1. Скачиваем свежий jar
-          curl -L -o authlib-injector.jar https://authlib-injector.yushi.moe/artifact/latest.jar
+          # 2. Скачиваем jar файл прямо из релизов GitHub
+          curl -L -o authlib-injector.jar "https://github.com/yushijinhun/authlib-injector/releases/download/v${LATEST_VER}/authlib-injector-${LATEST_VER}.jar"
           
           mkdir -p moe.yushi.authlibinjector
           
-          # 2. Создаем чистый index.json (только список версий)
+          # 3. Создаем index.json
           cat <<EOF > moe.yushi.authlibinjector/index.json
           {
             "formatVersion": 1,
@@ -44,7 +51,7 @@ jobs:
           }
           EOF
 
-          # 3. Создаем отдельный файл версии (например, 52.json)
+          # 4. Создаем файл конкретной версии (${LATEST_VER}.json)
           cat <<EOF > "moe.yushi.authlibinjector/${LATEST_VER}.json"
           {
             "formatVersion": 1,
