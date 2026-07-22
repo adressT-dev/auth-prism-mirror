@@ -31,15 +31,22 @@ jobs:
         run: |
           LATEST_VER="${{ steps.check_version.outputs.latest_ver }}"
           
+          # 1. Скачиваем jar
           curl -L -o authlib-injector.jar "https://github.com/yushijinhun/authlib-injector/releases/download/v${LATEST_VER}/authlib-injector-${LATEST_VER}.jar"
           
           SHA256=$(sha256sum authlib-injector.jar | awk '{print $1}')
           FILE_SIZE=$(stat -c%s authlib-injector.jar)
           TIME_NOW=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
           
+          # 2. Создаем Maven-папку для JAR (как требует Prism Meta)
+          MAVEN_PATH="libraries/moe/yushi/authlib-injector/${LATEST_VER}"
+          mkdir -p "${MAVEN_PATH}"
+          cp authlib-injector.jar "${MAVEN_PATH}/authlib-injector-${LATEST_VER}.jar"
+          
+          # 3. Создаем папку метаданных компонентов
           mkdir -p moe.yushi.authlibinjector
           
-          # 1. Сгенерировать index.json
+          # 4. Генерируем index.json
           cat <<EOF > moe.yushi.authlibinjector/index.json
           {
             "formatVersion": 1,
@@ -55,7 +62,7 @@ jobs:
           }
           EOF
 
-          # 2. Сгенерировать полный файл версии по идеальному стандарту Meta Server
+          # 5. Генерируем файл версии с правильной структурой и ссылками
           cat <<EOF > "moe.yushi.authlibinjector/${LATEST_VER}.json"
           {
             "formatVersion": 1,
@@ -71,7 +78,7 @@ jobs:
                 "name": "moe.yushi:authlib-injector:${LATEST_VER}",
                 "downloads": {
                   "artifact": {
-                    "url": "https://adressT-dev.github.io/auth-prism-mirror/authlib-injector.jar",
+                    "url": "https://adressT-dev.github.io/auth-prism-mirror/libraries/moe/yushi/authlib-injector/${LATEST_VER}/authlib-injector-${LATEST_VER}.jar",
                     "sha256": "${SHA256}",
                     "size": ${FILE_SIZE}
                   }
@@ -85,7 +92,7 @@ jobs:
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add authlib-injector.jar moe.yushi.authlibinjector/
+          git add authlib-injector.jar libraries/ moe.yushi.authlibinjector/
           
           if git diff --staged --quiet; then
             echo "Новых версий нет."
