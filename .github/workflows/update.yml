@@ -19,34 +19,42 @@ jobs:
         id: check_version
         run: |
           LATEST_VER=$(curl -s https://api.github.com/repos/yushijinhun/authlib-injector/releases/latest | jq -r '.tag_name' | sed 's/^v//')
-          
           if [ -z "$LATEST_VER" ] || [ "$LATEST_VER" = "null" ]; then
-            echo "Не удалось получить версию"
             exit 1
           fi
-          
           echo "latest_ver=$LATEST_VER" >> $GITHUB_OUTPUT
 
-      - name: Download and Update Files
+      - name: Download and Build Meta
         run: |
           LATEST_VER="${{ steps.check_version.outputs.latest_ver }}"
           
-          # 1. Скачиваем jar
+          # Скачиваем jar
           curl -L -o authlib-injector.jar "https://github.com/yushijinhun/authlib-injector/releases/download/v${LATEST_VER}/authlib-injector-${LATEST_VER}.jar"
           
           SHA256=$(sha256sum authlib-injector.jar | awk '{print $1}')
           FILE_SIZE=$(stat -c%s authlib-injector.jar)
           TIME_NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           
-          # 2. Создаем структуру пакетов Maven
+          # 1. Корневой index.json (регистрация пакета в лаунчере)
+          cat <<EOF > index.json
+          {
+            "formatVersion": 1,
+            "packages": [
+              {
+                "name": "Authlib Injector",
+                "uid": "moe.yushi.authlibinjector"
+              }
+            ]
+          }
+          EOF
+
+          # 2. Папка компонента и Maven библиотека
           MAVEN_PATH="libraries/moe/yushi/authlib-injector/${LATEST_VER}"
           mkdir -p "${MAVEN_PATH}"
           cp authlib-injector.jar "${MAVEN_PATH}/authlib-injector-${LATEST_VER}.jar"
-          
-          # 3. Создаем папку компонента
           mkdir -p moe.yushi.authlibinjector
-          
-          # 4. index.json по точному стандарту Prism/MultiMC Meta Spec
+
+          # 3. moe.yushi.authlibinjector/index.json
           cat <<EOF > moe.yushi.authlibinjector/index.json
           {
             "formatVersion": 1,
@@ -63,7 +71,7 @@ jobs:
           }
           EOF
 
-          # 5. Файл версии (${LATEST_VER}.json) по абсолютно строгому формату
+          # 4. moe.yushi.authlibinjector/${LATEST_VER}.json
           cat <<EOF > "moe.yushi.authlibinjector/${LATEST_VER}.json"
           {
             "formatVersion": 1,
@@ -72,7 +80,6 @@ jobs:
             "version": "${LATEST_VER}",
             "type": "release",
             "releaseTime": "${TIME_NOW}",
-            "mainClass": "net.yushi.authlibinjector.Main",
             "requires": [],
             "libraries": [
               {
@@ -89,15 +96,13 @@ jobs:
           }
           EOF
 
-      - name: Commit and Push if Changed
+      - name: Commit and Push
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add authlib-injector.jar libraries/ moe.yushi.authlibinjector/
+          git add index.json authlib-injector.jar libraries/ moe.yushi.authlibinjector/
           
-          if git diff --staged --quiet; then
-            echo "Изменений нет."
-          else
-            git commit -m "Auto-update authlib-injector to version ${{ steps.check_version.outputs.latest_ver }}"
+          if ! git diff --staged --quiet; then
+            git commit -m "Update meta for version ${{ steps.check_version.outputs.latest_ver }}"
             git push
           fi
