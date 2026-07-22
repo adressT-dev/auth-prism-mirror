@@ -2,8 +2,8 @@ name: Check & Auto Update Authlib Injector
 
 on:
   schedule:
-    - cron: '0 0 * * *' # Проверка раз в день
-  workflow_dispatch: # Ручной запуск кнопкой
+    - cron: '0 0 * * *'
+  workflow_dispatch:
 
 jobs:
   update:
@@ -23,9 +23,12 @@ jobs:
         run: |
           LATEST_VER="${{ steps.check_version.outputs.latest_ver }}"
           
+          # 1. Скачиваем свежий jar
           curl -L -o authlib-injector.jar https://authlib-injector.yushi.moe/artifact/latest.jar
           
           mkdir -p moe.yushi.authlibinjector
+          
+          # 2. Создаем чистый index.json (только список версий)
           cat <<EOF > moe.yushi.authlibinjector/index.json
           {
             "formatVersion": 1,
@@ -35,19 +38,30 @@ jobs:
               {
                 "version": "${LATEST_VER}",
                 "type": "release",
-                "time": "$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")",
-                "requires": [],
-                "mainClass": "net.yushi.authlibinjector.Main",
-                "libraries": [
-                  {
-                    "name": "moe.yushi:authlib-injector:${LATEST_VER}",
-                    "downloads": {
-                      "artifact": {
-                        "url": "https://raw.githubusercontent.com/${{ github.repository }}/main/authlib-injector.jar"
-                      }
-                    }
+                "time": "$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")"
+              }
+            ]
+          }
+          EOF
+
+          # 3. Создаем отдельный файл версии (например, 52.json)
+          cat <<EOF > "moe.yushi.authlibinjector/${LATEST_VER}.json"
+          {
+            "formatVersion": 1,
+            "name": "authlib-injector",
+            "uid": "moe.yushi.authlibinjector",
+            "version": "${LATEST_VER}",
+            "type": "release",
+            "time": "$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")",
+            "mainClass": "net.yushi.authlibinjector.Main",
+            "libraries": [
+              {
+                "name": "moe.yushi:authlib-injector:${LATEST_VER}",
+                "downloads": {
+                  "artifact": {
+                    "url": "https://raw.githubusercontent.com/${{ github.repository }}/main/authlib-injector.jar"
                   }
-                ]
+                }
               }
             ]
           }
@@ -57,7 +71,7 @@ jobs:
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add authlib-injector.jar moe.yushi.authlibinjector/index.json
+          git add authlib-injector.jar moe.yushi.authlibinjector/
           
           if git diff --staged --quiet; then
             echo "Новых версий нет."
