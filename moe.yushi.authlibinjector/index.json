@@ -1,0 +1,14 @@
+{
+  "formatVersion": 1,
+  "name": "authlib-injector",
+  "uid": "moe.yushi.authlibinjector",
+  "versions": [
+    {
+      "version": "52",
+      "type": "release",
+      "time": "2024-01-01T00:00:00.000Z",
+      "requires": [],
+      "mainClass": "net.yushi.authlibinjector.Main"
+    }
+  ]
+}
