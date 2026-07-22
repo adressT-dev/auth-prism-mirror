@@ -36,41 +36,42 @@ jobs:
           
           SHA256=$(sha256sum authlib-injector.jar | awk '{print $1}')
           FILE_SIZE=$(stat -c%s authlib-injector.jar)
-          TIME_NOW=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
+          TIME_NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           
-          # 2. Создаем Maven-папку для JAR (как требует Prism Meta)
+          # 2. Создаем структуру пакетов Maven
           MAVEN_PATH="libraries/moe/yushi/authlib-injector/${LATEST_VER}"
           mkdir -p "${MAVEN_PATH}"
           cp authlib-injector.jar "${MAVEN_PATH}/authlib-injector-${LATEST_VER}.jar"
           
-          # 3. Создаем папку метаданных компонентов
+          # 3. Создаем папку компонента
           mkdir -p moe.yushi.authlibinjector
           
-          # 4. Генерируем index.json
+          # 4. index.json по точному стандарту Prism/MultiMC Meta Spec
           cat <<EOF > moe.yushi.authlibinjector/index.json
           {
             "formatVersion": 1,
-            "name": "authlib-injector",
+            "name": "Authlib Injector",
             "uid": "moe.yushi.authlibinjector",
             "versions": [
               {
                 "version": "${LATEST_VER}",
                 "type": "release",
-                "time": "${TIME_NOW}"
+                "releaseTime": "${TIME_NOW}",
+                "sha256": "${SHA256}"
               }
             ]
           }
           EOF
 
-          # 5. Генерируем файл версии с правильной структурой и ссылками
+          # 5. Файл версии (${LATEST_VER}.json) по абсолютно строгому формату
           cat <<EOF > "moe.yushi.authlibinjector/${LATEST_VER}.json"
           {
             "formatVersion": 1,
-            "name": "authlib-injector",
+            "name": "Authlib Injector",
             "uid": "moe.yushi.authlibinjector",
             "version": "${LATEST_VER}",
             "type": "release",
-            "time": "${TIME_NOW}",
+            "releaseTime": "${TIME_NOW}",
             "mainClass": "net.yushi.authlibinjector.Main",
             "requires": [],
             "libraries": [
@@ -95,7 +96,7 @@ jobs:
           git add authlib-injector.jar libraries/ moe.yushi.authlibinjector/
           
           if git diff --staged --quiet; then
-            echo "Новых версий нет."
+            echo "Изменений нет."
           else
             git commit -m "Auto-update authlib-injector to version ${{ steps.check_version.outputs.latest_ver }}"
             git push
