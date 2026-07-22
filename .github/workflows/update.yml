@@ -39,7 +39,7 @@ jobs:
           
           mkdir -p moe.yushi.authlibinjector
           
-          # Генерируем 100% валидный index.json по спецификации Prism Meta
+          # 1. Сгенерировать index.json
           cat <<EOF > moe.yushi.authlibinjector/index.json
           {
             "formatVersion": 1,
@@ -55,7 +55,7 @@ jobs:
           }
           EOF
 
-          # Генерируем 100% валидный файл конкретной версии
+          # 2. Сгенерировать полный файл версии по идеальному стандарту Meta Server
           cat <<EOF > "moe.yushi.authlibinjector/${LATEST_VER}.json"
           {
             "formatVersion": 1,
@@ -65,12 +65,13 @@ jobs:
             "type": "release",
             "time": "${TIME_NOW}",
             "mainClass": "net.yushi.authlibinjector.Main",
+            "requires": [],
             "libraries": [
               {
                 "name": "moe.yushi:authlib-injector:${LATEST_VER}",
                 "downloads": {
                   "artifact": {
-                    "url": "https://raw.githubusercontent.com/${{ github.repository }}/main/authlib-injector.jar",
+                    "url": "https://adressT-dev.github.io/auth-prism-mirror/authlib-injector.jar",
                     "sha256": "${SHA256}",
                     "size": ${FILE_SIZE}
                   }
