@@ -2,6 +2,7 @@
   "formatVersion": 1,
   "name": "authlib-injector",
   "uid": "moe.yushi.authlibinjector",
+  "type": "release",
   "versions": [
     {
       "version": "52",
