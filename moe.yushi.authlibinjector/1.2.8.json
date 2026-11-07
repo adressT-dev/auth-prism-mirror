@@ -4,7 +4,7 @@
   "uid": "moe.yushi.authlibinjector",
   "version": "1.2.8",
   "type": "release",
-  "releaseTime": "2026-11-06T03:57:46Z",
+  "releaseTime": "2026-11-07T03:32:24Z",
   "requires": [],
   "libraries": [
     {
@@ -12,8 +12,8 @@
       "downloads": {
         "artifact": {
           "url": "https://adressT-dev.github.io/auth-prism-mirror/libraries/moe/yushi/authlib-injector/1.2.8/authlib-injector-1.2.8.jar",
-          "sha256": "3590bcb90a75c32ba8b10d692d26838caedbc267a57db23931694abc9598c873",
-          "size": 54894
+          "sha256": "9c7f4343e6c82034958ffb48c14a2cb0c85928be7283103ce17da00c6d5a7b10",
+          "size": 349681
         }
       }
     }
